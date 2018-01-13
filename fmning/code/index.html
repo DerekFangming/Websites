@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+    <br />
+    <textarea id="script" cols="150" style="height:200px"></textarea>
+    <br />
+    <br /> Domain:
+
+    <br />
+    <textarea disabled id="outputDomain" cols="150" style="height:150px"></textarea>
+    <br />
+    <br /> Dao:
+    <br />
+    <textarea disabled id="outputDao" cols="150" style="height:150px"></textarea>
+    <br />
+    <br /> JDBC:
+    <br />
+    <textarea disabled id="outputJDBC" cols="150" style="height:150px"></textarea>
+    <br />
+    <br />
+
+    <button type="button" onclick="generate();">Generate</button>
+
+    <script type="text/javascript">
+        function generate() {
+            var script = document.getElementById('script').value.toLowerCase();
+			var actTabName = capitalizeFirstLetter(script.trim().split(" ")[2].split("(")[0]);
+            var tabName = humanize(actTabName);
+            var tabArray = splitToArray(script);
+
+            var domainPackage = "package com.fmning.service.domain;";
+            createDomain(tabArray, domainPackage, tabName);
+
+            var daoPackage = "package com.fmning.service.dao;";
+            createDao(tabArray, daoPackage, tabName);
+			
+			var jdbcPackage = "package com.fmning.service.dao.impl.jdbc;";
+            createJdbc(tabArray, jdbcPackage, tabName, actTabName);
+
+        }
+
+        function splitToArray(constraint) {
+            var rawArray = constraint.split(/(\r\n|\n|\r)/gm);
+            var tabArray = [];
+            for (var i = 0; i < rawArray.length; i++) {
+                var processedStr = rawArray[i].trim();
+                if (processedStr.length > 0 && !processedStr.startsWith("create table") && !processedStr.startsWith(")")) {
+                    tabArray.push(processedStr);
+                }
+            }
+            return tabArray;
+        }
+
+        function createDomain(tabArray, domainPackage, tabName) {
+            var output = [];
+            output.push(domainPackage);
+            output.push("");
+
+            for (var i = 0; i < tabArray.length; i++) {
+                if (tabArray[i].includes("timestamp")) {
+                    output.push("import java.time.Instant;");
+                    output.push("");
+                    break;
+                }
+            }
+			
+            output.push("public class " + tabName + " {");
+
+            for (var i = 0; i < tabArray.length; i++) {
+                var colName = humanize(tabArray[i].split(" ")[0]);
+                var colType;
+                if (tabArray[i].includes("primary key")) {
+                    colType = "int";
+                } else if (tabArray[i].includes(" varchar(") || tabArray[i].includes(" text ") || tabArray[i].includes(" text,")) {
+                    colType = "String";
+                } else if (tabArray[i].includes(" timestamp ") || tabArray[i].includes(" timestamp,")) {
+                    colType = "Instant";
+                } else if (tabArray[i].includes(" boolean ") || tabArray[i].includes(" boolean,")) {
+                    colType = "boolean";
+                } else if (tabArray[i].includes(" integer ") || tabArray[i].includes(" integer,")) {
+                    colType = "int";
+                } else if (tabArray[i].includes(" decimal(")) {
+                    colType = "double";
+                }
+                output.push("\tprivate " + colType + " " + colName + ";");
+            }
+
+            output.push("");
+
+            for (var i = 0; i < tabArray.length; i++) {
+                var colName = humanize(tabArray[i].split(" ")[0]);
+                var colType;
+                if (tabArray[i].includes("primary key")) {
+                    colType = "int";
+                } else if (tabArray[i].includes(" varchar") || tabArray[i].includes(" text ") || tabArray[i].includes(" text,")) {
+                    colType = "String";
+                } else if (tabArray[i].includes(" timestamp ") || tabArray[i].includes(" timestamp,")) {
+                    colType = "Instant";
+                } else if (tabArray[i].includes(" boolean ") || tabArray[i].includes(" boolean,")) {
+                    colType = "boolean";
+                } else if (tabArray[i].includes(" integer ") || tabArray[i].includes(" integer,")) {
+                    colType = "int";
+                } else if (tabArray[i].includes(" decimal(")) {
+                    colType = "double";
+                }
+                output.push("\tpublic " + colType + " get" + capitalizeFirstLetter(colName) + "() {");
+                output.push("\t\treturn " + colName + ";");
+                output.push("\t}");
+                output.push("");
+                output.push("\tpublic void set" + capitalizeFirstLetter(colName) + "(" + colType + " " + colName + ") {");
+                output.push("\t\tthis." + colName + " = " + colName + ";");
+                output.push("\t}");
+                output.push("");
+            }
+
+            output.push("}");
+            var outputStr = output.join("\n");
+            document.getElementById('outputDomain').value = outputStr;
+
+        }
+
+        function createDao(tabArray, daoPackage, tabName) {
+            var output = [];
+            output.push(daoPackage);
+            output.push("");
+            output.push("import java.util.Arrays;");
+            output.push("import java.util.List;");
+            output.push("");
+            output.push("import com.fmning.service.dao.impl.QueryTerm;");
+            output.push("import com.fmning.service.dao.impl.RelationalOpType;");
+            output.push("import com.fmning.service.domain." + tabName + ";");
+            output.push("import com.fmning.util.Pair;");
+            output.push("");
+            output.push("public interface " + tabName + "Dao extends CommonDao<" + tabName + ">{");
+            output.push("\tenum Field implements DaoFieldEnum{");
+
+            for (var i = 0; i < tabArray.length; i++) {
+                var colName = tabArray[i].split(" ")[0];
+                var colType;
+                if (tabArray[i].includes("primary key")) {
+                    output.push("\t\t" + colName.toUpperCase() + "(true),");
+                } else {
+                    if (i == tabArray.length - 1) {
+                        output.push("\t\t" + colName.toUpperCase() + ";");
+                    } else {
+                        output.push("\t\t" + colName.toUpperCase() + ",");
+                    }
+                }
+            }
+
+            output.push("");
+            output.push("\t\tpublic boolean isPK = false;");
+            output.push("\t\tpublic String name;");
+            output.push("");
+            output.push("\t\tField(boolean isPK) {");
+            output.push("\t\t\tthis.isPK = isPK;");
+            output.push("\t\t\tthis.name = this.name().toLowerCase();");
+            output.push("\t\t}");
+            output.push("");
+            output.push("\t\tField() {");
+            output.push("\t\t\tthis(false);");
+            output.push("\t\t}");
+            output.push("");
+            output.push("\t\t@Override");
+            output.push("\t\tpublic QueryTerm getQueryTerm(Object value) {");
+            output.push("\t\t\treturn new QueryTerm(this.name, value);");
+            output.push("\t\t}");
+            output.push("");
+            output.push("\t\t@Override");
+            output.push("\t\tpublic QueryTerm getQueryTerm(RelationalOpType op, Object value) {");
+            output.push("\t\t\treturn new QueryTerm(this.name, op, value);");
+            output.push("\t\t}");
+            output.push("\t}");
+            output.push("");
+
+            output.push("\tList<Pair<Enum<\?>, String>> FieldTypes = Arrays.asList(");
+
+            for (var i = 0; i < tabArray.length; i++) {
+                var colName = tabArray[i].split(" ")[0].toUpperCase();
+                var colType;
+				var defaultVal = "";
+                if (tabArray[i].includes("primary key")) {
+                    colType = "SERIAL NOT NULL";
+                } else if (tabArray[i].includes(" varchar") || tabArray[i].includes(" text ") || tabArray[i].includes(" text,")) {
+                    if (tabArray[i].includes("not null")) {
+                        colType = "TEXT NOT NULL";
+                    } else {
+                        colType = "TEXT";
+                    }
+                } else if (tabArray[i].includes(" timestamp ") || tabArray[i].includes(" timestamp,")) {
+                    colType = tabArray[i].replace(tabArray[i].split(" ")[0], "").trim().toUpperCase().replace(",", "");
+                } else if (tabArray[i].includes(" boolean ") || tabArray[i].includes(" boolean,")) {
+                    if (tabArray[i].includes("not null")) {
+                        colType = "BOOLEAN NOT NULL";
+                    } else {
+                        colType = "BOOLEAN";
+                    }
+                } else if (tabArray[i].includes(" integer ") || tabArray[i].includes(" integer,")) {
+                    if (tabArray[i].includes("not null")) {
+                        colType = "INTEGER NOT NULL";
+                    } else {
+                        colType = "INTEGER";
+                    }
+                } else if (tabArray[i].includes(" decimal(")) {
+					if (tabArray[i].includes("not null")) {
+                        colType = "DECIMAL NOT NULL";
+                    } else {
+                        colType = "DECIMAL";
+                    }
+				}
+				
+				if (tabArray[i].includes(" default ")) {
+					defaultVal = (" default " + tabArray[i].split(" default ")[1].replace(",", "")).toUpperCase();
+				}
+				
+                if (i == tabArray.length - 1) {
+                    output.push("\t\tnew Pair<Enum<\?>, String>(Field." + colName + ", \"" + colType + defaultVal + "\"));");
+                } else {
+                    output.push("\t\tnew Pair<Enum<\?>, String>(Field." + colName + ", \"" + colType + defaultVal + "\"),");
+                }
+
+            }
+
+            output.push("");
+            output.push("}");
+            output.push("");
+            var outputStr = output.join("\n");
+            document.getElementById('outputDao').value = outputStr;
+
+        }
+		
+		function createJdbc(tabArray, jdbcPackage, tabName, actTabName) {
+            var output = [];
+            output.push(jdbcPackage);
+            output.push("");
+			
+			for (var i = 0; i < tabArray.length; i++) {
+                if (tabArray[i].includes("timestamp")) {
+                    output.push("import java.sql.Date;");
+                    break;
+                }
+            }
+			
+            output.push("import java.sql.ResultSet;");
+            output.push("import java.sql.SQLException;");
+            output.push("");
+            output.push("import org.springframework.jdbc.core.RowMapper;");
+            output.push("import org.springframework.stereotype.Repository;");
+            output.push("");
+            output.push("import com.fmning.service.dao." + tabName + "Dao;");
+            output.push("import com.fmning.service.dao.impl.CoreTableType;");
+            output.push("import com.fmning.service.dao.impl.NVPairList;");
+            output.push("import com.fmning.service.domain." + tabName + ";");
+			
+			for (var i = 0; i < tabArray.length; i++) {
+                if (tabArray[i].includes("timestamp") && !tabArray[i].includes("not null")) {
+                    output.push("import com.fmning.util.Util;");
+                    break;
+                }
+				
+				if (tabArray[i].includes(" integer ") && !tabArray[i].includes("not null")) {
+                    output.push("import com.fmning.util.Util;");
+                    break;
+                }
+				
+				if (tabArray[i].includes(" integer,") && !tabArray[i].includes("not null")) {
+                    output.push("import com.fmning.util.Util;");
+                    break;
+                }
+				
+				if (tabArray[i].includes(" decimal(") && !tabArray[i].includes("not null")) {
+                    output.push("import com.fmning.util.Util;");
+                    break;
+                }
+				
+            }
+			
+            output.push("");
+			
+            output.push("@Repository");
+            output.push("@Jdbc");
+            output.push("public class Jdbc" + tabName + "Dao extends JdbcBaseDao<" + tabName + "> implements " + tabName + "Dao{");
+			output.push("\tpublic Jdbc" + tabName + "Dao() {");
+			output.push("\t\tsuper(CoreTableType." + actTabName.toUpperCase() + "S);");
+			output.push("\t}");
+			output.push("");
+			output.push("\t@Override");
+			output.push("\tprotected NVPairList getNVPairs(" + tabName + " obj) {");
+			output.push("\t\tNVPairList params = new NVPairList();");
+			output.push("");
+
+            for (var i = 0; i < tabArray.length; i++) {
+                var colName = tabArray[i].split(" ")[0];
+                var methodName = "get" + capitalizeFirstLetter(humanize(colName));
+				
+				if (tabArray[i].includes("primary key")) {
+					continue;
+				}
+				
+				if (tabArray[i].includes(" timestamp ") || tabArray[i].includes(" timestamp,")) {
+					if (tabArray[i].includes("not null")) {
+						output.push("\t\tparams.addValue(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name, Date.from(obj." + methodName + "()));");
+					} else {
+						output.push("\t\tparams.addValue(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name, Util.parseDate(obj." + methodName + "()));");
+					}
+				} else {
+					if (tabArray[i].includes(" integer ") || tabArray[i].includes(" integer,") || tabArray[i].includes(" decimal(")) {
+						if (tabArray[i].includes("not null")) {
+							output.push("\t\tparams.addValue(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name, obj." + methodName + "());");
+						} else {
+							output.push("\t\tparams.addNullableNumValue(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name, obj." + methodName + "());");
+						}
+					} else {
+						output.push("\t\tparams.addValue(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name, obj." + methodName + "());");
+					}
+				}
+            }
+
+            output.push("");
+            output.push("\t\treturn params;");
+            output.push("\t}");
+            output.push("");
+			
+            output.push("\t@Override");
+            output.push("\tprotected RowMapper<" + tabName + "> getRowMapper() {");
+            output.push("\t\tRowMapper<" + tabName + "> rm = new RowMapper<" + tabName + ">() {");
+            output.push("\t\t\t@Override");
+            output.push("\t\t\tpublic " + tabName + " mapRow(ResultSet rs, int row) throws SQLException {");
+            output.push("\t\t\t\t" + tabName + " obj = new " + tabName + "();");
+            output.push("");
+
+            for (var i = 0; i < tabArray.length; i++) {
+                var colName = tabArray[i].split(" ")[0];
+                var setMethodName = "set" + capitalizeFirstLetter(humanize(colName));
+				var getMethodName;
+				
+				if (tabArray[i].includes("primary key")) {
+					getMethodName = "getInt";
+				} else if (tabArray[i].includes(" varchar") || tabArray[i].includes(" text ") || tabArray[i].includes(" text,")) {
+					getMethodName = "getString";
+				} else if (tabArray[i].includes(" timestamp ") || tabArray[i].includes(" timestamp,")) {
+					getMethodName = "getTimestamp";
+				} else if (tabArray[i].includes(" boolean ") || tabArray[i].includes(" boolean,")) {
+					getMethodName = "getBoolean";
+				} else if (tabArray[i].includes(" integer ") || tabArray[i].includes(" integer,")) {
+					getMethodName = "getInt";
+				} else if (tabArray[i].includes(" decimal(")) {
+					getMethodName = "getDouble";
+				}
+
+				
+				if (tabArray[i].includes(" timestamp ") || tabArray[i].includes(" timestamp,")) {
+					if (tabArray[i].includes("not null")) {
+						output.push("\t\t\t\tobj." + setMethodName + "(rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name).toInstant());");
+					} else {
+						output.push("\t\t\t\tobj." + setMethodName + "(Util.parseTimestamp(rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name)));");
+					}
+					
+				} else {
+					if (getMethodName == "getInt" && !tabArray[i].includes("primary key")) {
+						if (tabArray[i].includes("not null")) {
+							output.push("\t\t\t\tobj." + setMethodName + "(rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+						} else {
+							output.push("\t\t\t\tobj." + setMethodName + "(Util.getNullableInt(rs, " + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+						}
+					} else if (getMethodName == "getDouble") {
+						if (tabArray[i].includes("not null")) {
+							output.push("\t\t\t\tobj." + setMethodName + "(rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+						} else {
+							output.push("\t\t\t\tobj." + setMethodName + "(Util.getNullableDouble(rs, " + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+						}
+					} else {
+						output.push("\t\t\t\tobj." + setMethodName + "(rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+					}
+					
+				}
+				
+            }
+			
+            output.push("");
+            output.push("\t\t\t\treturn obj;");
+            output.push("\t\t\t}");
+            output.push("\t\t};");
+            output.push("\t\treturn rm;");
+            output.push("\t}");
+			
+			output.push("");
+			output.push("}");
+			
+            var outputStr = output.join("\n");
+            document.getElementById('outputJDBC').value = outputStr;
+
+        }
+
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+        function humanize(str) {
+            var frags = str.split('_');
+            for (i = 0; i < frags.length; i++) {
+                if (i == 0)
+                    continue;
+                frags[i] = frags[i].charAt(0).toUpperCase() + frags[i].slice(1);
+            }
+            return frags.join('');
+        }
+    </script>
+
+</body>
+
+</html>
