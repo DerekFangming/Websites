@@ -2,22 +2,25 @@
 <html>
 
 <body>
-
-    <br />
+	<h1>Remove the S from table name!</h1>
     <textarea id="script" cols="150" style="height:200px"></textarea>
     <br />
     <br /> Domain:
 
     <br />
-    <textarea disabled id="outputDomain" cols="150" style="height:150px"></textarea>
+    <textarea disabled id="outputDomain" cols="150" style="height:100px"></textarea>
     <br />
     <br /> Dao:
     <br />
-    <textarea disabled id="outputDao" cols="150" style="height:150px"></textarea>
+    <textarea disabled id="outputDao" cols="150" style="height:100px"></textarea>
     <br />
     <br /> JDBC:
     <br />
-    <textarea disabled id="outputJDBC" cols="150" style="height:150px"></textarea>
+    <textarea disabled id="outputJDBC" cols="150" style="height:100px"></textarea>
+    <br />
+    <br /> History:
+    <br />
+    <textarea disabled id="outputHist" cols="150" style="height:100px"></textarea>
     <br />
     <br />
 
@@ -38,6 +41,8 @@
 			
 			var jdbcPackage = "package com.fmning.service.dao.impl.jdbc;";
             createJdbc(tabArray, jdbcPackage, tabName, actTabName);
+            
+            createHist(tabArray, actTabName);
 
         }
 
@@ -392,6 +397,43 @@
             var outputStr = output.join("\n");
             document.getElementById('outputJDBC').value = outputStr;
 
+        }
+        
+        function createHist(tabArray, actTabName) {
+        	var output = [];
+        	var trigCol = "";
+        	for (var i = 0; i < tabArray.length; i++) {
+        		var colName = tabArray[i].split(" ")[0];
+        		trigCol += "OLD." + colName + ", ";
+        		
+        		if (i == 0) {
+        			output.push("create table " + actTabName + "_hists (");
+        		}
+        		
+        		if (tabArray[i].includes("primary key")) {
+        			output.push("\t" + colName + " integer,");
+        		} else if (i == tabArray.length - 1){
+        			output.push("\t" + tabArray[i] + ",");
+        		} else {
+        			output.push("\t" + tabArray[i]);
+        		}
+        	}
+        	
+        	output.push("\taction varchar(1) not null default 'U',\n\taction_date timestamp without time zone not null default now()\n);");
+        	
+        	output.push("\nCREATE OR REPLACE FUNCTION " + actTabName + "_func() RETURNS trigger AS");
+        	output.push("$$\nBEGIN");
+			output.push("\tINSERT INTO " + actTabName + "_hists");
+			output.push("\tVALUES (" + trigCol + "substring(TG_OP,1,1), NOW());");
+			output.push("\tIF TG_OP = 'DELETE' THEN\n\t\tRETURN OLD;\n\tELSE\n\t\tRETURN NEW;\n\tEND IF;");
+			output.push("END;\n$$\nLANGUAGE 'plpgsql';");
+			
+			output.push("\nCREATE TRIGGER " + actTabName + "_trigger BEFORE UPDATE OR DELETE");
+			output.push("ON " + actTabName + "s FOR EACH ROW");
+        	output.push("EXECUTE PROCEDURE " + actTabName + "_func();");
+        	
+        	var outputStr = output.join("\n");
+            document.getElementById('outputHist').value = outputStr;
         }
 
         function capitalizeFirstLetter(string) {
