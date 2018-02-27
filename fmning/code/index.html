@@ -3,6 +3,7 @@
 
 <body>
 	<h1>Remove the S from table name!</h1>
+	<input id="oldCheckbox" type="checkbox" /> CSA Project (old version)<br />
     <textarea id="script" cols="150" style="height:200px"></textarea>
     <br />
     <br /> Domain:
@@ -33,14 +34,17 @@
             var tabName = humanize(actTabName);
             var tabArray = splitToArray(script);
 
-            var domainPackage = "package com.fmning.service.domain;";
-            createDomain(tabArray, domainPackage, tabName);
+			var oldVer = document.getElementById('oldCheckbox').checked;
+			var basePkg = oldVer ? "package com.fmning.service." : "package com.factory.";
+			
+            var domainPackage = basePkg + "domain;";
+            createDomain(tabArray, domainPackage, tabName, oldVer);
 
-            var daoPackage = "package com.fmning.service.dao;";
+            var daoPackage = basePkg + "dao;";
             createDao(tabArray, daoPackage, tabName);
 			
-			var jdbcPackage = "package com.fmning.service.dao.impl.jdbc;";
-            createJdbc(tabArray, jdbcPackage, tabName, actTabName);
+			var jdbcPackage = basePkg + "dao.impl.jdbc;";
+            createJdbc(tabArray, jdbcPackage, tabName, actTabName, oldVer);
             
             createHist(tabArray, actTabName);
 
@@ -58,7 +62,7 @@
             return tabArray;
         }
 
-        function createDomain(tabArray, domainPackage, tabName) {
+        function createDomain(tabArray, domainPackage, tabName, oldVer) {
             var output = [];
             output.push(domainPackage);
             output.push("");
@@ -104,11 +108,11 @@
                 } else if (tabArray[i].includes(" timestamp ") || tabArray[i].includes(" timestamp,")) {
                     colType = "Instant";
                 } else if (tabArray[i].includes(" boolean ") || tabArray[i].includes(" boolean,")) {
-                    colType = "boolean";
+                    colType = oldVer ? "boolean" : "Boolean";
                 } else if (tabArray[i].includes(" integer ") || tabArray[i].includes(" integer,")) {
-                    colType = "int";
+                    colType = oldVer ? "int" : "Integer";
                 } else if (tabArray[i].includes(" decimal(")) {
-                    colType = "double";
+                    colType = oldVer ? "double" : "Double";
                 }
                 output.push("\tpublic " + colType + " get" + capitalizeFirstLetter(colName) + "() {");
                 output.push("\t\treturn " + colName + ";");
@@ -236,7 +240,7 @@
 
         }
 		
-		function createJdbc(tabArray, jdbcPackage, tabName, actTabName) {
+		function createJdbc(tabArray, jdbcPackage, tabName, actTabName, oldVer) {
             var output = [];
             output.push(jdbcPackage);
             output.push("");
@@ -315,7 +319,11 @@
 						if (tabArray[i].includes("not null")) {
 							output.push("\t\tparams.addValue(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name, obj." + methodName + "());");
 						} else {
-							output.push("\t\tparams.addNullableNumValue(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name, obj." + methodName + "());");
+							if (oldVer) {
+								output.push("\t\tparams.addNullableNumValue(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name, obj." + methodName + "());");
+							} else {
+								output.push("\t\tparams.addValue(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name, obj." + methodName + "());");
+							}
 						}
 					} else {
 						output.push("\t\tparams.addValue(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name, obj." + methodName + "());");
@@ -365,19 +373,31 @@
 					
 				} else {
 					if (getMethodName == "getInt" && !tabArray[i].includes("primary key")) {
-						if (tabArray[i].includes("not null")) {
-							output.push("\t\t\t\tobj." + setMethodName + "(rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+						if (oldVer) {
+							if (tabArray[i].includes("not null")) {
+								output.push("\t\t\t\tobj." + setMethodName + "(rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+							} else {
+								output.push("\t\t\t\tobj." + setMethodName + "(Util.getNullableInt(rs, " + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+							}
 						} else {
-							output.push("\t\t\t\tobj." + setMethodName + "(Util.getNullableInt(rs, " + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+							output.push("\t\t\t\tobj." + setMethodName + "((Integer)rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
 						}
 					} else if (getMethodName == "getDouble") {
-						if (tabArray[i].includes("not null")) {
-							output.push("\t\t\t\tobj." + setMethodName + "(rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+						if (oldVer) {
+							if (tabArray[i].includes("not null")) {
+								output.push("\t\t\t\tobj." + setMethodName + "(rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+							} else {
+								output.push("\t\t\t\tobj." + setMethodName + "(Util.getNullableDouble(rs, " + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+							}
 						} else {
-							output.push("\t\t\t\tobj." + setMethodName + "(Util.getNullableDouble(rs, " + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+							output.push("\t\t\t\tobj." + setMethodName + "((Double)rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
 						}
 					} else {
-						output.push("\t\t\t\tobj." + setMethodName + "(rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+						if (!oldVer && getMethodName = "getBoolean") {
+							output.push("\t\t\t\tobj." + setMethodName + "((Boolean)rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+						} else {
+							output.push("\t\t\t\tobj." + setMethodName + "(rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+						}
 					}
 					
 				}
@@ -408,10 +428,11 @@
         		
         		if (i == 0) {
         			output.push("create table " + actTabName + "_hists (");
+					output.push("\tid serial primary key,");
         		}
         		
         		if (tabArray[i].includes("primary key")) {
-        			output.push("\t" + colName + " integer,");
+        			output.push("\to" + colName + " integer,");
         		} else if (i == tabArray.length - 1){
         			output.push("\t" + tabArray[i] + ",");
         		} else {
@@ -424,7 +445,7 @@
         	output.push("\nCREATE OR REPLACE FUNCTION " + actTabName + "_func() RETURNS trigger AS");
         	output.push("$$\nBEGIN");
 			output.push("\tINSERT INTO " + actTabName + "_hists");
-			output.push("\tVALUES (" + trigCol + "substring(TG_OP,1,1), NOW());");
+			output.push("\tVALUES (nextval('" + actTabName.toLowerCase() + "_hists_id_seq'::regclass), " + trigCol + "substring(TG_OP,1,1), NOW());");
 			output.push("\tIF TG_OP = 'DELETE' THEN\n\t\tRETURN OLD;\n\tELSE\n\t\tRETURN NEW;\n\tEND IF;");
 			output.push("END;\n$$\nLANGUAGE 'plpgsql';");
 			
