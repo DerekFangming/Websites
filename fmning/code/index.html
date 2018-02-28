@@ -353,11 +353,11 @@
 					getMethodName = "getInt";
 				} else if (tabArray[i].includes(" varchar") || tabArray[i].includes(" text ") || tabArray[i].includes(" text,")) {
 					getMethodName = "getString";
-				} else if (tabArray[i].includes(" timestamp ") || tabArray[i].includes(" timestamp,")) {
+				} else if (tabArray[i].includes(" timestamp") || tabArray[i].includes(" timestamp,")) {
 					getMethodName = "getTimestamp";
-				} else if (tabArray[i].includes(" boolean ") || tabArray[i].includes(" boolean,")) {
+				} else if (tabArray[i].includes(" boolean") || tabArray[i].includes(" boolean,")) {
 					getMethodName = "getBoolean";
-				} else if (tabArray[i].includes(" integer ") || tabArray[i].includes(" integer,")) {
+				} else if (tabArray[i].includes(" integer") || tabArray[i].includes(" integer,")) {
 					getMethodName = "getInt";
 				} else if (tabArray[i].includes(" decimal(")) {
 					getMethodName = "getDouble";
@@ -393,7 +393,7 @@
 							output.push("\t\t\t\tobj." + setMethodName + "((Double)rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
 						}
 					} else {
-						if (!oldVer && getMethodName = "getBoolean") {
+						if (!oldVer && getMethodName == "getBoolean") {
 							output.push("\t\t\t\tobj." + setMethodName + "((Boolean)rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
 						} else {
 							output.push("\t\t\t\tobj." + setMethodName + "(rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
