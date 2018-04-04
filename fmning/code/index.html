@@ -41,7 +41,7 @@
             createDomain(tabArray, domainPackage, tabName, oldVer);
 
             var daoPackage = basePkg + "dao;";
-            createDao(tabArray, daoPackage, tabName);
+            createDao(tabArray, daoPackage, tabName, oldVer);
 			
 			var jdbcPackage = basePkg + "dao.impl.jdbc;";
             createJdbc(tabArray, jdbcPackage, tabName, actTabName, oldVer);
@@ -87,11 +87,11 @@
                 } else if (tabArray[i].includes(" timestamp ") || tabArray[i].includes(" timestamp,")) {
                     colType = "Instant";
                 } else if (tabArray[i].includes(" boolean ") || tabArray[i].includes(" boolean,")) {
-                    colType = "boolean";
+                    colType = oldVer ? "boolean" : "Boolean";
                 } else if (tabArray[i].includes(" integer ") || tabArray[i].includes(" integer,")) {
-                    colType = "int";
+                    colType = oldVer ? "int" : "Integer";
                 } else if (tabArray[i].includes(" decimal(")) {
-                    colType = "double";
+                    colType = oldVer ? "double" : "Double";
                 }
                 output.push("\tprivate " + colType + " " + colName + ";");
             }
@@ -130,17 +130,19 @@
 
         }
 
-        function createDao(tabArray, daoPackage, tabName) {
+        function createDao(tabArray, daoPackage, tabName, oldVer) {
             var output = [];
             output.push(daoPackage);
             output.push("");
             output.push("import java.util.Arrays;");
             output.push("import java.util.List;");
             output.push("");
-            output.push("import com.fmning.service.dao.impl.QueryTerm;");
-            output.push("import com.fmning.service.dao.impl.RelationalOpType;");
-            output.push("import com.fmning.service.domain." + tabName + ";");
-            output.push("import com.fmning.util.Pair;");
+            
+            var projBase = oldVer ? "fmning.service" : "factory";
+            output.push("import com." + projBase + ".dao.impl.QueryTerm;");
+            output.push("import com." + projBase + ".dao.impl.RelationalOpType;");
+            output.push("import com." + projBase + ".domain." + tabName + ";");
+            output.push("import com." + (oldVer ? "fmning.util" : "factory.utils") + ".Pair;");
             output.push("");
             output.push("public interface " + tabName + "Dao extends CommonDao<" + tabName + ">{");
             output.push("\tenum Field implements DaoFieldEnum{");
@@ -258,10 +260,12 @@
             output.push("import org.springframework.jdbc.core.RowMapper;");
             output.push("import org.springframework.stereotype.Repository;");
             output.push("");
-            output.push("import com.fmning.service.dao." + tabName + "Dao;");
-            output.push("import com.fmning.service.dao.impl.CoreTableType;");
-            output.push("import com.fmning.service.dao.impl.NVPairList;");
-            output.push("import com.fmning.service.domain." + tabName + ";");
+            
+            var projBase = oldVer ? "fmning.service" : "factory";
+            output.push("import com." + projBase + ".dao." + tabName + "Dao;");
+            output.push("import com." + projBase + ".dao.impl.CoreTableType;");
+            output.push("import com." + projBase + ".dao.impl.NVPairList;");
+            output.push("import com." + projBase + ".domain." + tabName + ";");
 			
 			for (var i = 0; i < tabArray.length; i++) {
                 if (tabArray[i].includes("timestamp") && !tabArray[i].includes("not null")) {
