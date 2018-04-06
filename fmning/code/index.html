@@ -384,7 +384,7 @@
 								output.push("\t\t\t\tobj." + setMethodName + "(Util.getNullableInt(rs, " + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
 							}
 						} else {
-							output.push("\t\t\t\tobj." + setMethodName + "((Integer)rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+							output.push("\t\t\t\tobj." + setMethodName + "((Integer)rs.getObject(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
 						}
 					} else if (getMethodName == "getDouble") {
 						if (oldVer) {
@@ -394,11 +394,11 @@
 								output.push("\t\t\t\tobj." + setMethodName + "(Util.getNullableDouble(rs, " + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
 							}
 						} else {
-							output.push("\t\t\t\tobj." + setMethodName + "((Double)rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+							output.push("\t\t\t\tobj." + setMethodName + "((Double)rs.getObject(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
 						}
 					} else {
 						if (!oldVer && getMethodName == "getBoolean") {
-							output.push("\t\t\t\tobj." + setMethodName + "((Boolean)rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
+							output.push("\t\t\t\tobj." + setMethodName + "((Boolean)rs.getObject(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
 						} else {
 							output.push("\t\t\t\tobj." + setMethodName + "(rs." + getMethodName + "(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name));");
 						}
