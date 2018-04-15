@@ -266,25 +266,27 @@
             output.push("import com." + projBase + ".dao.impl.CoreTableType;");
             output.push("import com." + projBase + ".dao.impl.NVPairList;");
             output.push("import com." + projBase + ".domain." + tabName + ";");
+            
+            var utilStr = oldVer ? "import com.fmning.util.Util;" : "import com.factory.utils.Utils;";
 			
 			for (var i = 0; i < tabArray.length; i++) {
                 if (tabArray[i].includes("timestamp") && !tabArray[i].includes("not null")) {
-                    output.push("import com.fmning.util.Util;");
+                    output.push(utilStr);
                     break;
                 }
 				
 				if (tabArray[i].includes(" integer ") && !tabArray[i].includes("not null")) {
-                    output.push("import com.fmning.util.Util;");
+                    output.push(utilStr);
                     break;
                 }
 				
 				if (tabArray[i].includes(" integer,") && !tabArray[i].includes("not null")) {
-                    output.push("import com.fmning.util.Util;");
+                    output.push(utilStr);
                     break;
                 }
 				
 				if (tabArray[i].includes(" decimal(") && !tabArray[i].includes("not null")) {
-                    output.push("import com.fmning.util.Util;");
+                    output.push(utilStr);
                     break;
                 }
 				
