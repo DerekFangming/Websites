@@ -90,7 +90,7 @@
                     colType = oldVer ? "boolean" : "Boolean";
                 } else if (tabArray[i].includes(" integer ") || tabArray[i].includes(" integer,")) {
                     colType = oldVer ? "int" : "Integer";
-                } else if (tabArray[i].includes(" decimal(")) {
+                } else if (tabArray[i].includes(" decimal(") || tabArray[i].includes(" decimal ") || tabArray[i].includes(" decimal,")) {
                     colType = oldVer ? "double" : "Double";
                 }
                 output.push("\tprivate " + colType + " " + colName + ";");
@@ -111,7 +111,7 @@
                     colType = oldVer ? "boolean" : "Boolean";
                 } else if (tabArray[i].includes(" integer ") || tabArray[i].includes(" integer,")) {
                     colType = oldVer ? "int" : "Integer";
-                } else if (tabArray[i].includes(" decimal(")) {
+                } else if (tabArray[i].includes(" decimal(") || tabArray[i].includes(" decimal ") || tabArray[i].includes(" decimal,")) {
                     colType = oldVer ? "double" : "Double";
                 }
                 output.push("\tpublic " + colType + " get" + capitalizeFirstLetter(colName) + "() {");
@@ -214,7 +214,7 @@
                     } else {
                         colType = "INTEGER";
                     }
-                } else if (tabArray[i].includes(" decimal(")) {
+                } else if (tabArray[i].includes(" decimal(") || tabArray[i].includes(" decimal ") || tabArray[i].includes(" decimal,")) {
 					if (tabArray[i].includes("not null")) {
                         colType = "DECIMAL NOT NULL";
                     } else {
@@ -321,7 +321,7 @@
 						output.push("\t\tparams.addValue(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name, Util.parseDate(obj." + methodName + "()));");
 					}
 				} else {
-					if (tabArray[i].includes(" integer ") || tabArray[i].includes(" integer,") || tabArray[i].includes(" decimal(")) {
+					if (tabArray[i].includes(" integer ") || tabArray[i].includes(" integer,") || tabArray[i].includes(" decimal(") || tabArray[i].includes(" decimal ") || tabArray[i].includes(" decimal,")) {
 						if (tabArray[i].includes("not null")) {
 							output.push("\t\tparams.addValue(" + tabName + "Dao.Field." + colName.toUpperCase() + ".name, obj." + methodName + "());");
 						} else {
@@ -365,7 +365,7 @@
 					getMethodName = "getBoolean";
 				} else if (tabArray[i].includes(" integer") || tabArray[i].includes(" integer,")) {
 					getMethodName = "getInt";
-				} else if (tabArray[i].includes(" decimal(")) {
+				} else if (tabArray[i].includes(" decimal(") || tabArray[i].includes(" decimal ") || tabArray[i].includes(" decimal,")) {
 					getMethodName = "getDouble";
 				}
 
