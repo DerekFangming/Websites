@@ -1057,13 +1057,13 @@
 									$('#submitBtn').prop('disabled', true);
 									$.ajax({
 										type: "POST",
-										url: "https://wcservice.fmning.com/send_email",
-										data: JSON.stringify({"content" : content}),
+										url: "http://postman.fmning.com/api/notification",
+										data: JSON.stringify({"subject": "New message from fmning.com", "content" : content}),
 										contentType: "application/json",
 										dataType: "json",
 										success: function (data) {
 											if (data['error'] != '') {
-												alert('Something went wrong. Please contact admin@fmning.com');
+												alert('Something went wrong. Please contact admin@fmning.com '+data['error']);
 											} else {
 												$('#nameField').val('');
 												$('#emailField').val('');
@@ -1075,6 +1075,9 @@
 										},
 										error: function (xhr, textStatus, errorThrown) {
 											alert('Something went wrong. Please contact admin@fmning.com');
+											console.log(xhr);
+											console.log(textStatus);
+											console.log(errorThrown);
 											return false;
 										}
 									});
