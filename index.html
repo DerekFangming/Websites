@@ -17,13 +17,17 @@
 			function checkRedirect() {
 				if (window.location.href == 'https://sso.fmning.com/') {
 					window.location.href = 'https://sso.fmning.com/authentication/';
+				} else {
+					$('#overlay').remove();
 				}
+				
 			}
 			
 			window.onload = checkRedirect;
 		</script>
 	</head>
 	<body>
+		<div id="overlay" class="overlay"></div>
 		<section id="title-slide" class="clearfix" data-stellar-background-ratio="0.5" >
 			<div class="container">
 				<div class="row">

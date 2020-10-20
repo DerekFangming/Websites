@@ -1086,3 +1086,14 @@ body {
     font-size: 75px;
     font-size: 7.5rem
 }
+
+.overlay {
+	background: #fff;
+	position: fixed;
+	bottom: 0;
+	right: 0;
+	left: 0;
+	top: 0;
+	z-index: 1000;
+}
+
