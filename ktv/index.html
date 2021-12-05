@@ -43,6 +43,23 @@
 	    search();
 	  });
 	  
+	  $('#requestBtn').click(function() {
+	    $.ajax({
+          url: 'https://fmning.com/tools/api/ktv',
+          type: 'POST',
+          data: JSON.stringify({'title': keyword.trim()}),
+          contentType: "application/json; charset=utf-8",
+          dataType:'json',
+          success: function(data) {
+            alert('Requested');
+          },
+          error: function(xhr, textStatus) {
+            alert(xhr.responseJSON.message);
+          }
+        });
+	  });
+	  
+	  
 	  search();
 	  
 	  function search() {
@@ -52,13 +69,23 @@
 		let query = keyword.trim() == '' ? '' : '?keyword=' + keyword;
 		
 		$.ajax({
-          url: 'http://localhost:8080/tools/api/ktv' + query,
+          url: 'https://fmning.com/tools/api/ktv' + query,
           type: 'GET',
           contentType: "application/json; charset=utf-8",
           dataType:'json',
           success: function(data) {
 		    $('#loadingDiv').addClass('d-none');
 		    $('#resultDiv').removeClass('d-none');
+			
+			if(data.length == 0) {
+			  $('#songName').html(keyword);
+			  $('#songList').addClass('d-none');
+			  $('#songRequest').removeClass('d-none');
+			  return;
+			} else {
+			  $('#songList').removeClass('d-none');
+			  $('#songRequest').addClass('d-none');
+			}
             
 			let html = '';
 			let template = '<tr>\
@@ -83,9 +110,8 @@
             alert(xhr.responseJSON.message);
           }
         });
-		
-		
 	  }
+	  
 	});
   </script>
 </head>
@@ -112,20 +138,24 @@
 	    <table class="table">
           <thead>
             <tr>
-              <th style="width:55%">Name</th>
-              <th style="width:15%">Singer</th>
-              <th style="width:15%">Language</th>
-              <th style="width:15%">Category</th>
+              <th style="width:40%">Name</th>
+              <th style="width:20%">Singer</th>
+              <th style="width:20%">Language</th>
+              <th style="width:20%">Category</th>
             </tr>
           </thead>
-          <tbody id="songList">
-            <tr>
-              <td>Mark</td>
-              <td>Mark</td>
-              <td>Otto</td>
-              <td>@mdo</td>
+          <tbody id="songList"></tbody>
+		  <tbody id="songRequest">
+		    <tr class="text-center pointer" (click)="loadDirectory(directory)">
+              <td colSpan="4">
+                <div class="alert alert-warning cursor-pointer" role="alert">
+                  <h4 class="alert-heading">No matches found</h4>
+                  <p>Song with name <b id="songName"></b> is not available. Click on the request button below to request it.</p><hr/>
+                  <button id="requestBtn" type="button" class="btn btn-success">Request</button>
+                </div>
+              </td>
             </tr>
-          </tbody>
+		  </tbody>
         </table>
 	  </div>
     </div>
