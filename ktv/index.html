@@ -91,8 +91,8 @@
 			let template = '<tr>\
                   <td>name</td>\
                   <td>singer</td>\
-                  <td>language</td>\
-                  <td>category</td>\
+                  <td class="d-none d-md-table-cell">language</td>\
+                  <td class="d-none d-md-table-cell">category</td>\
                 </tr>';
 				
 			for (let song of data) {
@@ -120,7 +120,7 @@
 	<div class="container">
       <form class="mx-2 my-auto d-inline w-100">
 	    <div class="input-group">
-		  <input id="keyword" type="text" class="form-control" placeholder="Enter keyword like song name or singer name">
+		  <input id="keyword" type="text" class="form-control" placeholder="Song & singer name">
 		  <span class="input-group-append">
 		    <button id="searchBtn" class="btn btn-outline-secondary" type="button">Search</button>
 		  </span>
@@ -137,11 +137,11 @@
 	  <div class="col">
 	    <table class="table">
           <thead>
-            <tr>
+			<tr>
               <th style="width:40%">Name</th>
               <th style="width:20%">Singer</th>
-              <th style="width:20%">Language</th>
-              <th style="width:20%">Category</th>
+              <th style="width:20%" class="d-none d-md-table-cell">Language</th>
+              <th style="width:20%" class="d-none d-md-table-cell">Category</th>
             </tr>
           </thead>
           <tbody id="songList"></tbody>
