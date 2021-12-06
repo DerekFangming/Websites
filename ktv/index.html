@@ -77,6 +77,12 @@
 		    $('#loadingDiv').addClass('d-none');
 		    $('#resultDiv').removeClass('d-none');
 			
+			if (data.length == 50) {
+			  $('#resultHelperDiv').removeClass('d-none');
+			} else {
+			  $('#resultHelperDiv').addClass('d-none');
+			}
+			
 			if (data.length == 0) {
 			  $('#songName').html(keyword);
 			  $('#songList').addClass('d-none');
@@ -85,12 +91,6 @@
 			} else {
 			  $('#songList').removeClass('d-none');
 			  $('#songRequest').addClass('d-none');
-			}
-			
-			if (data.length == 50) {
-			  $('#resultHelperDiv').removeClass('d-none');
-			} else {
-			  $('#resultHelperDiv').addClass('d-none');
 			}
             
 			let html = '';
