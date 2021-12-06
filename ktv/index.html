@@ -77,7 +77,7 @@
 		    $('#loadingDiv').addClass('d-none');
 		    $('#resultDiv').removeClass('d-none');
 			
-			if(data.length == 0) {
+			if (data.length == 0) {
 			  $('#songName').html(keyword);
 			  $('#songList').addClass('d-none');
 			  $('#songRequest').removeClass('d-none');
@@ -85,6 +85,12 @@
 			} else {
 			  $('#songList').removeClass('d-none');
 			  $('#songRequest').addClass('d-none');
+			}
+			
+			if (data.length == 50) {
+			  $('#resultHelperDiv').removeClass('d-none');
+			} else {
+			  $('#resultHelperDiv').addClass('d-none');
 			}
             
 			let html = '';
@@ -134,7 +140,7 @@
       <div class="col text-center"><span class="fa fa-refresh fa-spin fa-3x fa-fw"></span></div>
     </div>
     <div id="resultDiv" class="row mt-4">
-	  <div class="col">
+	  <div class="col-12">
 	    <table class="table">
           <thead>
 			<tr>
@@ -145,20 +151,21 @@
             </tr>
           </thead>
           <tbody id="songList"></tbody>
-		  <tbody id="songRequest">
-		    <tr class="text-center pointer" (click)="loadDirectory(directory)">
-              <td colSpan="4">
-                <div class="alert alert-warning cursor-pointer" role="alert">
-                  <h4 class="alert-heading">No matches found</h4>
-                  <p>Song with name <b id="songName"></b> is not available. Click on the request button below to request it.</p><hr/>
-                  <button id="requestBtn" type="button" class="btn btn-success">Request</button>
-                </div>
-              </td>
-            </tr>
-		  </tbody>
         </table>
 	  </div>
     </div>
+	<div id="resultHelperDiv" class="col-12 d-none">
+	  <p class="mt-3">Showing only the first 50 results</p>
+	</div>
+	<div id="songRequest" class="row d-none">  
+	  <div class="col">
+        <div class="alert alert-warning text-center" role="alert">
+          <h4 class="alert-heading">No matches found</h4>
+          <p><b id="songName"></b> is not found. Click on the request button below to request it.</p><hr/>
+          <button id="requestBtn" type="button" class="btn btn-success">Request</button>
+        </div>
+	  </div>
+	</div>
   </div>
 </body>
 </html>
