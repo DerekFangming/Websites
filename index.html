@@ -1070,7 +1070,7 @@
 									$('#submitBtn').prop('disabled', true);
 									$.ajax({
 										type: "POST",
-										url: "https://www.fmning.com/tools/api/email/send",
+										url: "https://tools.fmning.com/api/email/send",
 										data: JSON.stringify({"subject": "New message", "content" : content, "senderType": "SEND_IN_BLUE"}),
 										contentType: "application/json",
 										dataType: "json",
